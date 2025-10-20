@@ -13,3 +13,8 @@ spring:
       ddl-auto: update
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQLDialect
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
