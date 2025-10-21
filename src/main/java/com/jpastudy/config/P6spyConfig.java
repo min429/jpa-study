@@ -17,9 +17,15 @@ import jakarta.annotation.PostConstruct;
 @Configuration
 public class P6spyConfig implements MessageFormattingStrategy {
 
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_BLUE = "\u001B[34m";
+    /**
+     * 색상 정의
+     */
+    private static final String ANSI_RESET = "\u001B[0m"; // 기본
+    private static final String ANSI_BLUE = "\u001B[34m"; // SQL 키워드
 
+    /**
+     * SQL 키워드
+     */
     private static final List<String> SQL_KEYWORDS = Arrays.asList(
         // DML
         "select", "insert", "update", "delete", "values", "into",
@@ -32,11 +38,30 @@ public class P6spyConfig implements MessageFormattingStrategy {
         "and", "or", "not", "in", "like", "between", "is", "null", "exists", "case", "when", "then", "else", "end"
     );
 
+    /**
+     * SQL 키워드를 찾기 위한 정규식 패턴
+     */
+    private static final Pattern SQL_KEYWORDS_PATTERN = Pattern.compile(
+        "\\b(" +
+            SQL_KEYWORDS.stream()
+                .map(Pattern::quote)
+                .sorted(Comparator.comparingInt(String::length).reversed()) // 긴 단어가 우선 매칭 (예: "order by"가 "or"보다 먼저)
+                .collect(Collectors.joining("|"))
+            + ")\\b",
+        Pattern.CASE_INSENSITIVE
+    );
+
+    /**
+     * 현재 클래스를 로그 포맷터로 등록
+     */
     @PostConstruct
     public void setLogMessageFormat() {
         P6SpyOptions.getActiveInstance().setLogMessageFormat(this.getClass().getName());
     }
 
+    /**
+     * SQL 로그 출력 설정
+     */
     @Override
     public String formatMessage(int connectionId, String now, long elapsed, String category,
         String prepared, String sql, String url) {
@@ -51,6 +76,9 @@ public class P6spyConfig implements MessageFormattingStrategy {
             + sql;
     }
 
+    /**
+     * SQL 포맷팅
+     */
     private String formatSql(String category, String sql) {
         if (sql == null || sql.isBlank()) {
             return sql;
@@ -68,19 +96,12 @@ public class P6spyConfig implements MessageFormattingStrategy {
         return sql;
     }
 
+    /**
+     * SQL 키워드 색칠
+     */
     private String highlightSql(String sql) {
         return SQL_KEYWORDS_PATTERN.matcher(sql).replaceAll(match ->
             ANSI_BLUE + match.group(1) + ANSI_RESET
         );
     }
-
-    private static final Pattern SQL_KEYWORDS_PATTERN = Pattern.compile(
-        "\\b(" +
-            SQL_KEYWORDS.stream()
-                .map(Pattern::quote)
-                .sorted(Comparator.comparingInt(String::length).reversed()) // 긴 단어가 우선 매칭 (예: "order by"가 "or"보다 먼저)
-                .collect(Collectors.joining("|"))
-            + ")\\b",
-        Pattern.CASE_INSENSITIVE
-    );
 }
