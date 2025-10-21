@@ -33,7 +33,7 @@ class Company(
 
     var name: String,
 
-    @OneToOne(mappedBy = "company", cascade = [CascadeType.ALL])
+    @OneToOne(mappedBy = "company", cascade = [CascadeType.ALL], orphanRemoval = true)
     var ceo: Ceo? = null
 ) {
     fun addCustomer(CEO: Ceo) {
@@ -43,12 +43,22 @@ class Company(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Company) return false
-        return id != null && id == other.id
+        if (javaClass != other?.javaClass) return false
+
+        other as Company
+
+        if (id != other.id) return false
+        if (name != other.name) return false
+        if (ceo != other.ceo) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
+        var result = id?.hashCode() ?: 0
+        result = 31 * result + name.hashCode()
+        result = 31 * result + (ceo?.hashCode() ?: 0)
+        return result
     }
 }
 
