@@ -71,4 +71,12 @@ class JpaTest {
 
         println(lbr.findBooksByLibraryName("library"))
     }
+
+    @Test
+    @DisplayName("findAll()은 영속성 컨텍스트와 관계없이 즉시 DB를 조회한다.")
+    fun test4() {
+        val library = Library(name = "library")
+        lbr.save(library)
+        println(lbr.findAll())
+    }
 }
