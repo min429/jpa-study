@@ -1,9 +1,13 @@
 package com.jpastudy
 
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
 import jakarta.persistence.EntityManager
+import jakarta.persistence.Id
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.Test
 
@@ -26,6 +30,12 @@ class JpaTest {
     @Autowired
     lateinit var lbr: LibraryRepository
 
+    @Autowired
+    lateinit var byr: BuyerRepository
+
+    @Autowired
+    lateinit var t6r: Test6Repository
+
     @Test
     @DisplayName("객체참조는 영속성 전이와 별도로 직접 설정해줘야 한다.")
     fun test1() {
@@ -41,7 +51,7 @@ class JpaTest {
         println("savedCmp class: ${savedCeo.company?.javaClass}") // proxy object
 
 //        val savedCmp = cmpr.findByName("company")
-//        println("savedCeo class: ${savedCmp.ceo?.javaClass}") // real object (Ceo를 먼저 조회해야 Company를 알 수 있어서 Ceo는 무조건 즉시로딩됨)
+//        println("savedCeo class: ${savedCmp.ceo?.javaClass}") // real object (JPA 스펙 상 OneToOne에서 연관관계 주인 엔티티(FK를 가진 엔티티)는 무조건 즉시로딩됨)
     }
 
     @Test
@@ -49,9 +59,9 @@ class JpaTest {
     fun test2() {
         val books = listOf(Book(name = "book1"), Book(name = "book2"))
         val library = Library(name = "library")
-        library.addBooks(books)
+        library.addBooks(*books.toTypedArray())
 
-        // TODO: 영속성 전이 없애고 save 둘다 호출하는거 좀 별로인듯
+        // TODO: 영속성 전이 없애고 save 둘다 호출하는거 좀 별로인듯 -> test5에서 해결
         lbr.save(library)
         br.saveAll(books)
 
@@ -64,8 +74,8 @@ class JpaTest {
         val book = Book(name = "book")
         val manager = Manager(name = "manager")
         val library = Library(name = "library")
-        library.addBook(book)
-        library.hire(manager)
+        library.addBooks(book)
+        library.hireManagers(manager)
 
         lbr.save(library)
 
@@ -73,10 +83,82 @@ class JpaTest {
     }
 
     @Test
-    @DisplayName("findAll()은 영속성 컨텍스트와 관계없이 즉시 DB를 조회한다.")
+    @DisplayName("findAll()은 즉시 DB를 조회하고 영속성 컨텍스트와 동기화한다.")
     fun test4() {
+        val book = Book(name = "book")
         val library = Library(name = "library")
-        lbr.save(library)
-        println(lbr.findAll())
+        library.addBooks(book)
+
+        lbr.save(library) // @GeneratedValue를 쓰는 경우, persist/merge 시 books가 프록시객체(PersistentBag)으로 감싸짐
+        println(library.books.javaClass) // 프록시 객체(PersistentBag) 출력
+
+        em.clear()
+
+        val savedLibrary = lbr.findAll().first()
+
+        book.name = "changed"
+
+        println(library === savedLibrary) // 참조가 같은 객체 (영속성 컨텍스트에서 @ID 필드를 기준으로 엔티티를 관리하고 DB 조회 시 동일한 객체로 매핑해줌)
+        println(savedLibrary.books.first().name) // changed
+
+        em.clear()
+    }
+
+    @Test
+    @DisplayName("둘 이상의 부모엔티티 -> 영속성 전이(REMOVE), 고아객체 옵션 적용x")
+    fun test5() {
+        val book = Book(name = "book")
+        val library = Library(name = "library")
+        val buyer = Buyer(name = "buyer")
+
+        // 양쪽 참조를 다 설정해줘야 한다.
+        library.addBooks(book)
+        buyer.buyBooks(book)
+
+        // 영속성 전이 PERSIST는 설정o
+        em.persist(library)
+        em.persist(buyer)
+
+        em.flush() // TODO: flush() 할 때랑 안할 때랑 다름
+
+        // 양쪽 참조를 다 해제해줘야 한다.
+        library.removeBooks(book)
+//        buyer.sellBooks(book)
+
+        // 영속성 전이 REMOVE, orphanRemoval은 설정x
+        em.remove(library)
+//        em.remove(buyer)
+
+        // TODO: cascade:RESTRICT인데 null 할당해버림
+        em.flush()
+        em.clear()
+    }
+
+    @Test
+    @DisplayName("merge vs persist")
+    fun test6() {
+        val test = Test6(1, "test")
+
+        t6r.save(test) // id가 있으므로 merge 된다.
+        test.name = "changed" // merge인 경우 컨텍스트에 반영되지 않는다.
+
+        em.flush()
+        em.clear()
+
+        println("name: ${t6r.findById(1).get().name}")
+
+        // merge(entity)는 entity를 shallow copy한 객체를 영속성 컨텍스트에 저장 및 return 하고,
+        // persist(entity)는 entity를 영속성 컨텍스트에 저장 및 return 한다.
     }
 }
+
+@Entity
+class Test6(
+    @Id
+    var id: Long? = null, // GenerationType 지정x
+
+    @Column(unique = true)
+    var name: String
+)
+
+interface Test6Repository : JpaRepository<Test6, Long>

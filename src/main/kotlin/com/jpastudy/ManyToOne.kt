@@ -17,6 +17,7 @@ class Book(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,14 +33,26 @@ class Buyer(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
 
-    @OneToMany(mappedBy = "buyer")
+    @OneToMany(
+        mappedBy = "buyer",
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH],
+        fetch = FetchType.LAZY
+    )
     var books: MutableList<Book> = mutableListOf()
 ) {
-    fun buyBooks(books: List<Book>) {
-        this.books.addAll(books)
-        books.forEach { it.buyer = this }
+    fun buyBooks(vararg books: Book) {
+        val targets = books.toSet()
+        targets.forEach { it.buyer = this }
+        this.books.addAll(targets)
+    }
+
+    fun sellBooks(vararg books: Book) {
+        val targets = books.toSet()
+        targets.forEach { it.buyer = null }
+        this.books.removeAll(targets)
     }
 }
 
@@ -49,6 +62,7 @@ class Manager(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,31 +76,50 @@ class Library(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
 
-    @OneToMany(mappedBy = "library")
+    @OneToMany(
+        mappedBy = "library",
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH],
+        fetch = FetchType.LAZY
+    )
     var books: MutableList<Book> = mutableListOf(),
 
-    @OneToMany(mappedBy = "library")
+    @OneToMany(
+        mappedBy = "library",
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH],
+        fetch = FetchType.LAZY
+    )
     var managers: MutableList<Manager> = mutableListOf()
 ) {
-    fun addBook(book: Book) {
-        this.books.add(book)
-        book.library = this
+    fun addBooks(vararg books: Book) {
+        val targets = books.toSet()
+        targets.forEach { it.library = this }
+        this.books.addAll(targets)
     }
 
-    fun addBooks(books: List<Book>) {
-        this.books.addAll(books)
-        books.forEach { it.library = this }
+    fun hireManagers(vararg managers: Manager) {
+        val targets = managers.toSet()
+        targets.forEach { it.library = this }
+        this.managers.addAll(targets)
     }
 
-    fun hire(manager: Manager) {
-        this.managers.add(manager)
-        manager.library = this
+    fun removeBooks(vararg books: Book) {
+        val targets = books.toSet()
+        targets.forEach { it.library = null }
+        this.books.removeAll(targets)
+    }
+
+    fun fireManagers(vararg managers: Manager) {
+        val targets = managers.toSet()
+        targets.forEach { it.library = null }
+        this.managers.removeAll(targets)
     }
 }
 
 interface BookRepository : JpaRepository<Book, Long> {
+    fun findByName(name: String): Book
 }
 
 interface ManagerRepository : JpaRepository<Manager, Long> {

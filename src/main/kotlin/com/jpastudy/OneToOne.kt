@@ -9,6 +9,7 @@ class Ceo(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -31,6 +32,7 @@ class Company(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
 
     @OneToOne(mappedBy = "company", cascade = [CascadeType.ALL], orphanRemoval = true)
