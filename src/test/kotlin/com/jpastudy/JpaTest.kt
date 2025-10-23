@@ -103,7 +103,7 @@ class JpaTest {
 
         em.clear()
     }
-
+    
     @Test
     @DisplayName("둘 이상의 부모엔티티 -> 영속성 전이(REMOVE), 고아객체 옵션 적용x")
     fun test5() {
@@ -116,22 +116,21 @@ class JpaTest {
         buyer.buyBooks(book)
 
         // 영속성 전이 PERSIST는 설정o
-        em.persist(library)
-        em.persist(buyer)
+        em.persist(library) // library, book 영속화 및 insert 쿼리 발생 (book.buyer = null)
+        em.persist(buyer) // book은 이미 영속화 되어있으므로 buyer에 대한 insert 쿼리만 발생
 
-        em.flush() // TODO: flush() 할 때랑 안할 때랑 다름
+        // 영속성 컨텍스트와 DB가 일치하지 않지만 괜찮다. 어짜피 나중에 flush() 될 테니.
 
         // 양쪽 참조를 다 해제해줘야 한다.
         library.removeBooks(book)
-//        buyer.sellBooks(book)
 
         // 영속성 전이 REMOVE, orphanRemoval은 설정x
         em.remove(library)
-//        em.remove(buyer)
 
-        // TODO: cascade:RESTRICT인데 null 할당해버림
         em.flush()
         em.clear()
+
+        // FK의 on delete 설정은 RESTRICT 이지만, nullable 이기 때문에 null은 할당 가능하다.
     }
 
     @Test
