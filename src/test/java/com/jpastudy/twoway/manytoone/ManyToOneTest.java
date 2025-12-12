@@ -1,14 +1,5 @@
 package com.jpastudy.twoway.manytoone;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.jpastudy.twoway.manytoone.test1.Comment1;
 import com.jpastudy.twoway.manytoone.test1.Comment1Repository;
 import com.jpastudy.twoway.manytoone.test1.Post1;
@@ -21,9 +12,16 @@ import com.jpastudy.twoway.manytoone.test3.Comment3;
 import com.jpastudy.twoway.manytoone.test3.Comment3Repository;
 import com.jpastudy.twoway.manytoone.test3.Post3;
 import com.jpastudy.twoway.manytoone.test3.Post3Repository;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 // 테스트 환경에서는 @Transactional를 쓰면 개별 테스트가 끝날 때 트랜잭션이 롤백되고 영속성 컨텍스트가 사라짐
 // flush란 영속성 컨텍스트의 내용을 DB에 반영하는 것.(커밋은 아님) 그 과정에서 쿼리가 출력됨
@@ -61,14 +59,14 @@ public class ManyToOneTest {
     void init1() {
         for (int i = 1; i <= 3; i++) {
             Post1 p = Post1.builder()
-                .title("title%d".formatted(i))
-                .body("body%d".formatted(i))
-                .build();
+                    .title("title%d".formatted(i))
+                    .body("body%d".formatted(i))
+                    .build();
 
             for (int j = 1; j <= 3; j++) {
                 Comment1 c = Comment1.builder()
-                    .body("body%d".formatted(j))
-                    .build();
+                        .body("body%d".formatted(j))
+                        .build();
                 p.addComment(c);
             }
 
@@ -85,14 +83,14 @@ public class ManyToOneTest {
     void init2() {
         for (int i = 1; i <= 3; i++) {
             Post2 p = Post2.builder()
-                .title("title%d".formatted(i))
-                .body("body%d".formatted(i))
-                .build();
+                    .title("title%d".formatted(i))
+                    .body("body%d".formatted(i))
+                    .build();
 
             for (int j = 1; j <= 3; j++) {
                 Comment2 c = Comment2.builder()
-                    .body("body%d".formatted(j))
-                    .build();
+                        .body("body%d".formatted(j))
+                        .build();
                 p.addComment(c);
             }
 
@@ -109,14 +107,14 @@ public class ManyToOneTest {
     void init3() {
         for (int i = 1; i <= 3; i++) {
             Post3 p = Post3.builder()
-                .title("title%d".formatted(i))
-                .body("body%d".formatted(i))
-                .build();
+                    .title("title%d".formatted(i))
+                    .body("body%d".formatted(i))
+                    .build();
 
             for (int j = 1; j <= 3; j++) {
                 Comment3 c = Comment3.builder()
-                    .body("body%d".formatted(j))
-                    .build();
+                        .body("body%d".formatted(j))
+                        .build();
                 p.addComment(c);
             }
 
@@ -173,6 +171,17 @@ public class ManyToOneTest {
         comments.forEach(c -> c.getPost().getBody()); // 각각 개별 Post에 대해 조회함
     }
 
+    @Test
+    @DisplayName("Post 삭제 시 고아객체 제거")
+    void test1_6() {
+        init1();
+        List<Post1> posts = post1Repository.findAll();
+        List<Comment1> comments = comment1Repository.findAllByPostIdIn(posts.stream().map(Post1::getId).collect(Collectors.toList()));
+        comments.forEach(c -> c.getPost().addComment(c));
+        post1Repository.deleteAll(posts);
+        em.flush();
+    }
+
     /**
      * [test2]
      * 배치사이즈 적용o
@@ -207,6 +216,7 @@ public class ManyToOneTest {
 
     /**
      * [test3]
+     *
      * @SoftDelete 적용
      */
     @Test
