@@ -1,13 +1,12 @@
 package com.jpastudy.twoway.manytoone.test3;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SoftDelete;
 
-import jakarta.persistence.*;
-import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -43,7 +42,7 @@ public class Post3 {
      * 부모 엔티티 자체가 삭제된 경우에 자식 엔티티를 삭제하고 싶은 경우, CascadeType.Remove를 추가한다.
      */
 
-    // cascade.ALL: 영속성 전이 -> Post를 영속화할 때 연관된 엔티티도 영속화한다.
+    // cascade.ALL: 영속성 전이 -> Post 영속성 관련 모든 작업이 Comment에도 전파된다.
     // orphanRemoval = true: 부모객체(Post)에서 자식객체를 제거(comments.remove(comment))하면 comment는 고아객체가 됨 -> 트랜잭션 종료될 때 제거됨
     // cascade.ALL, orphanRemoval = true -> 자식 엔티티의 생명주기를 부모 엔티티에 종속시킴
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
