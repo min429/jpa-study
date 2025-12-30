@@ -142,6 +142,9 @@ interface LibraryRepository : JpaRepository<Library, Long> {
     fun findByBooksName(booksName: String): MutableList<Library>
 }
 
+/**
+ * Student(N) : School(1)
+ */
 @Entity
 class Student(
     @Id

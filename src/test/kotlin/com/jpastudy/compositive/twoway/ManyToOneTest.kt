@@ -30,6 +30,11 @@ class ManyToOneTest {
     @Autowired
     lateinit var scr: SchoolRepository
 
+    private fun flushAndClear() {
+        em.flush()
+        em.clear()
+    }
+
     @Test
     @DisplayName("library.books 조회 가능")
     fun test2() {
@@ -68,7 +73,7 @@ class ManyToOneTest {
         lbr.save(library) // @GeneratedValue를 쓰는 경우, persist/merge 시 books가 프록시객체(PersistentBag)으로 감싸짐
         println(library.books.javaClass) // 프록시 객체(PersistentBag) 출력
 
-        em.clear()
+        flushAndClear()
 
         val savedLibrary = lbr.findAll().first()
 
@@ -76,8 +81,6 @@ class ManyToOneTest {
 
         println(library === savedLibrary) // 참조가 같은 객체 (영속성 컨텍스트에서 @ID 필드를 기준으로 엔티티를 관리하고 DB 조회 시 동일한 객체로 매핑해줌)
         println(savedLibrary.books.first().name) // changed
-
-        em.clear()
     }
 
     @Test
@@ -103,8 +106,7 @@ class ManyToOneTest {
         // 영속성 전이 REMOVE, orphanRemoval은 설정x
         em.remove(library)
 
-        em.flush()
-        em.clear()
+        flushAndClear()
 
         // FK의 on delete 설정은 RESTRICT 이지만, nullable 이기 때문에 null은 할당 가능하다.
     }
@@ -118,8 +120,7 @@ class ManyToOneTest {
         lbr.save(library)
         br.saveAll(books)
 
-        em.flush()
-        em.clear()
+        flushAndClear()
 
         // 일부 조회 (1개)
         val savedLibrary = lbr.findByBooksName("book1").first()
@@ -139,8 +140,7 @@ class ManyToOneTest {
         scr.save(school)
         str.saveAll(students)
 
-        em.flush()
-        em.clear()
+        flushAndClear()
 
         // 일부 조회 (1개)
         val savedLibrary = scr.findByStudentsNameNow("student1").first()
@@ -148,11 +148,57 @@ class ManyToOneTest {
         // clear() 하면 가져온 만큼만 삭제
         savedLibrary.students.clear()
 
-        em.flush()
-        em.clear()
+        flushAndClear()
 
         // 다시 조회해보면 삭제하지 않은 student2는 남아있음
         val savedBook = str.findAll().first()
         assertThat(savedBook.name).isEqualTo("student2")
+    }
+
+    @Test
+    @DisplayName("N:M 지연로딩 시 N+M+1 쿼리가 발생한다.")
+    fun test8() {
+        val booksList = listOf(
+            // library1
+            listOf(
+                Book(name = "book1"), // buyer1
+                Book(name = "book2"), // buyer2
+                Book(name = "book3"), // buyer3
+            ),
+            // library2
+            listOf(
+                Book(name = "book4"), // buyer4
+                Book(name = "book5"), // buyer5
+                Book(name = "book6"), // buyer6
+            )
+        )
+        val libraries = listOf(Library(name = "library1"), Library(name = "library2"))
+        for (i in 0 until booksList.size) {
+            libraries[i].addBooks(*booksList[i].toTypedArray())
+        }
+        lbr.saveAll(libraries)
+
+        val buyers = listOf(
+            Buyer(name = "buyer1"),
+            Buyer(name = "buyer2"),
+            Buyer(name = "buyer3"),
+            Buyer(name = "buyer4"),
+            Buyer(name = "buyer5"),
+            Buyer(name = "buyer6")
+        )
+        for (i in 0 until buyers.size) {
+            val books = booksList.flatten()
+            buyers[i].buyBooks(books[i])
+        }
+        byr.saveAll(buyers)
+
+        flushAndClear()
+
+        val savedLibraries = lbr.findAll()
+
+        // 쿼리 2 + 6 + 1 = 9개
+        // books에서는 각 요소의 bookId를 모르지만, buyer는 buyer의 id를 알고 있다.
+//        savedLibraries.forEach { it.books.map { book -> book.buyer?.name } }
+        savedLibraries.forEach { it.books.map { book -> book.buyer }.map { buyer -> buyer?.name } }
     }
 }
