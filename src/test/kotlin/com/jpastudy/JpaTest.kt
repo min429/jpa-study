@@ -1,4 +1,4 @@
-package com.jpastudy.compositive
+package com.jpastudy
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

@@ -1,4 +1,4 @@
-package com.jpastudy.compositive
+package com.jpastudy.compositive.twoway
 
 import jakarta.persistence.*
 import org.springframework.data.jpa.repository.JpaRepository

@@ -1,5 +1,6 @@
-package com.jpastudy.compositive
+package com.jpastudy.compositive.twoway
 
+import com.jpastudy.compositive.TRepository
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,4 +1,4 @@
-package com.jpastudy.compositive
+package com.jpastudy.compositive.twoway
 
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.DisplayName
