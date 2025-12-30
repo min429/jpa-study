@@ -1,4 +1,4 @@
-package com.jpastudy
+package com.jpastudy.compositive
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -103,7 +103,7 @@ class JpaTest {
 
         em.clear()
     }
-    
+
     @Test
     @DisplayName("둘 이상의 부모엔티티 -> 영속성 전이(REMOVE), 고아객체 옵션 적용x")
     fun test5() {

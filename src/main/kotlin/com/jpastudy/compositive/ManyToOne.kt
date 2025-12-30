@@ -1,4 +1,4 @@
-package com.jpastudy
+package com.jpastudy.compositive
 
 
 import jakarta.persistence.*
