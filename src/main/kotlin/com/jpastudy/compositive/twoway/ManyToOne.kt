@@ -21,9 +21,11 @@ class Book(
     var name: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
     var library: Library? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
     var buyer: Buyer? = null
 )
 
@@ -66,6 +68,7 @@ class Manager(
     var name: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
     var library: Library? = null
 )
 
@@ -149,6 +152,7 @@ class Student(
     var name: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
     var school: School? = null
 )
 

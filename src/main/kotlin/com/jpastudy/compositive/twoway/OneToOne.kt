@@ -13,6 +13,7 @@ class Ceo(
     var name: String,
 
     @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
     var company: Company? = null
 ) {
     override fun equals(other: Any?): Boolean {

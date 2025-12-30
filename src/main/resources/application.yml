@@ -10,7 +10,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect # JPA가 사용하는 sql을 mysql로 설정
     hibernate:
-      ddl-auto: update # create: 재시작 시 테이블 지우고 다시 만듦 / update: 유지
+      ddl-auto: create # create: 재시작 시 테이블 지우고 다시 만듦 / update: 유지
     show-sql: false # JPA가 create 해주는 sql을 log로 남김. hibernate log 사용 시 false로 설정
     properties:
       hibernate:
