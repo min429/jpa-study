@@ -44,13 +44,13 @@ class Buyer(
     var books: MutableList<Book> = mutableListOf()
 ) {
     fun buyBooks(vararg books: Book) {
-        val targets = books.toSet()
+        val targets = books.toList()
         targets.forEach { it.buyer = this }
         this.books.addAll(targets)
     }
 
     fun sellBooks(vararg books: Book) {
-        val targets = books.toSet()
+        val targets = books.toList()
         targets.forEach { it.buyer = null }
         this.books.removeAll(targets)
     }
@@ -94,25 +94,25 @@ class Library(
     var managers: MutableList<Manager> = mutableListOf()
 ) {
     fun addBooks(vararg books: Book) {
-        val targets = books.toSet()
+        val targets = books.toList()
         targets.forEach { it.library = this }
         this.books.addAll(targets)
     }
 
     fun hireManagers(vararg managers: Manager) {
-        val targets = managers.toSet()
+        val targets = managers.toList()
         targets.forEach { it.library = this }
         this.managers.addAll(targets)
     }
 
     fun removeBooks(vararg books: Book) {
-        val targets = books.toSet()
+        val targets = books.toList()
         targets.forEach { it.library = null }
         this.books.removeAll(targets)
     }
 
     fun fireManagers(vararg managers: Manager) {
-        val targets = managers.toSet()
+        val targets = managers.toList()
         targets.forEach { it.library = null }
         this.managers.removeAll(targets)
     }
@@ -135,4 +135,48 @@ interface LibraryRepository : JpaRepository<Library, Long> {
 
     @EntityGraph(attributePaths = ["books", "managers"])
     fun findLibraryByName(name: String): Library
+
+    fun findByBooksName(booksName: String): MutableList<Library>
+}
+
+@Entity
+class Student(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    var school: School? = null
+)
+
+@Entity
+class School(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @OneToMany(
+        mappedBy = "school",
+        cascade = [CascadeType.ALL], orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    var students: MutableList<Student> = mutableListOf(),
+) {
+    fun enrollStudents(vararg students: Student) {
+        val targets = students.toList()
+        targets.forEach { it.school = this }
+        this.students.addAll(targets)
+    }
+}
+
+interface StudentRepository : JpaRepository<Student, Long> {}
+interface SchoolRepository : JpaRepository<School, Long> {
+    @Query("select sc from School sc join fetch sc.students st where st.name = :studentsName")
+    fun findByStudentsNameNow(studentsName: String): MutableList<School>
 }

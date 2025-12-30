@@ -1,7 +1,7 @@
 package com.jpastudy.compositive.twoway
 
-import com.jpastudy.compositive.TRepository
 import jakarta.persistence.EntityManager
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -25,7 +25,10 @@ class ManyToOneTest {
     lateinit var byr: BuyerRepository
 
     @Autowired
-    lateinit var t6r: TRepository
+    lateinit var str: StudentRepository
+
+    @Autowired
+    lateinit var scr: SchoolRepository
 
     @Test
     @DisplayName("library.books 조회 가능")
@@ -78,7 +81,7 @@ class ManyToOneTest {
     }
 
     @Test
-    @DisplayName("둘 이상의 부모엔티티 -> 영속성 전이(REMOVE), 고아객체 옵션 적용x")
+    @DisplayName("둘 이상의 부모엔티티 -> 영속성 전이(REMOVE), 고아객체 옵션 적용x (나머지 영속성 전이 옵션은 사용해도 될듯)")
     fun test5() {
         val book = Book(name = "book")
         val library = Library(name = "library")
@@ -104,5 +107,52 @@ class ManyToOneTest {
         em.clear()
 
         // FK의 on delete 설정은 RESTRICT 이지만, nullable 이기 때문에 null은 할당 가능하다.
+    }
+
+    @Test
+    @DisplayName("지연로딩으로 컬렉션 조건에 맞게 가져온 후 컬렉션에 접근하면 전체 컬렉션을 가져와버림")
+    fun test6() {
+        val books = listOf(Book(name = "book1"), Book(name = "book2"))
+        val library = Library(name = "library")
+        library.addBooks(*books.toTypedArray())
+        lbr.save(library)
+        br.saveAll(books)
+
+        em.flush()
+        em.clear()
+
+        // 일부 조회 (1개)
+        val savedLibrary = lbr.findByBooksName("book1").first()
+
+        // 지연로딩 시 컬렉션 전체 다 가져옴 (2개)
+        assertThat(savedLibrary.books.size).isEqualTo(2)
+
+        // 컬렉션 요소 id 같은 것들을 따로 가지고 있지 않기 때문에 컬렉션에 접근한 순간 DB에서 전부 가져오게 됨
+    }
+
+    @Test
+    @DisplayName("join fetch로 컬렉션 일부 조회 후 clear() 하면 조회한 일부 요소만 삭제함. 전체 요소 삭제 x")
+    fun test7() {
+        val students = listOf(Student(name = "student1"), Student(name = "student2"))
+        val school = School(name = "school")
+        school.enrollStudents(*students.toTypedArray())
+        scr.save(school)
+        str.saveAll(students)
+
+        em.flush()
+        em.clear()
+
+        // 일부 조회 (1개)
+        val savedLibrary = scr.findByStudentsNameNow("student1").first()
+
+        // clear() 하면 가져온 만큼만 삭제
+        savedLibrary.students.clear()
+
+        em.flush()
+        em.clear()
+
+        // 다시 조회해보면 삭제하지 않은 student2는 남아있음
+        val savedBook = str.findAll().first()
+        assertThat(savedBook.name).isEqualTo("student2")
     }
 }
