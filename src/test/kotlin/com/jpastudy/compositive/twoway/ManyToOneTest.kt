@@ -46,7 +46,7 @@ class ManyToOneTest {
         lbr.save(library)
         br.saveAll(books)
 
-        println(lbr.findBooksByLibraryName("library"))
+        println(br.findAllByLibraryName(library.name))
     }
 
     @Test
@@ -60,7 +60,7 @@ class ManyToOneTest {
 
         lbr.save(library)
 
-        println(lbr.findBooksByLibraryName("library"))
+        println(br.findAllByLibraryName(library.name))
     }
 
     @Test
@@ -123,7 +123,7 @@ class ManyToOneTest {
         flushAndClear()
 
         // 일부 조회 (1개)
-        val savedLibrary = lbr.findByBooksName("book1").first()
+        val savedLibrary = lbr.findAllByBooksName(books.first().name).first()
 
         // 지연로딩 시 컬렉션 전체 다 가져옴 (2개)
         assertThat(savedLibrary.books.size).isEqualTo(2)
@@ -143,7 +143,7 @@ class ManyToOneTest {
         flushAndClear()
 
         // 일부 조회 (1개)
-        val savedLibrary = scr.findByStudentsNameNow("student1").first()
+        val savedLibrary = scr.findAllWithStudentsByStudentsName(students.first().name).first()
 
         // clear() 하면 가져온 만큼만 삭제
         savedLibrary.students.clear()
@@ -200,5 +200,20 @@ class ManyToOneTest {
         // books에서는 각 요소의 bookId를 모르지만, buyer는 buyer의 id를 알고 있다.
 //        savedLibraries.forEach { it.books.map { book -> book.buyer?.name } }
         savedLibraries.forEach { it.books.map { book -> book.buyer }.map { buyer -> buyer?.name } }
+    }
+
+    @Test
+    @DisplayName("findAllWith~ 메서드는 미리 구현되어있지만, fetch join이 아니다. 따라서 직접 쿼리를 작성해야한다.")
+    fun test9() {
+        val students = listOf(Student(name = "student1"), Student(name = "student2"))
+        val school = School(name = "school")
+        school.enrollStudents(*students.toTypedArray())
+        scr.save(school)
+        str.saveAll(students)
+
+        flushAndClear()
+
+        val savedLibrary = scr.findAllWithStudentsByName(school.name).first()
+        print(savedLibrary.students.first().name)
     }
 }

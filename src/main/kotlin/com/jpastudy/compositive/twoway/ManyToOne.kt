@@ -2,7 +2,6 @@ package com.jpastudy.compositive.twoway
 
 
 import jakarta.persistence.*
-import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
@@ -122,7 +121,8 @@ class Library(
 }
 
 interface BookRepository : JpaRepository<Book, Long> {
-    fun findByName(name: String): Book
+    @Query("select b from Book b join fetch b.library l where l.name = :libraryName")
+    fun findAllByLibraryName(libraryName: String): MutableList<Book>
 }
 
 interface ManagerRepository : JpaRepository<Manager, Long> {
@@ -132,14 +132,7 @@ interface BuyerRepository : JpaRepository<Buyer, Long> {
 }
 
 interface LibraryRepository : JpaRepository<Library, Long> {
-
-    @Query("select b from Library l join l.books b where l.name = :name")
-    fun findBooksByLibraryName(name: String): List<Book>
-
-    @EntityGraph(attributePaths = ["books", "managers"])
-    fun findLibraryByName(name: String): Library
-
-    fun findByBooksName(booksName: String): MutableList<Library>
+    fun findAllByBooksName(booksName: String): MutableList<Library>
 }
 
 /**
@@ -184,6 +177,10 @@ class School(
 
 interface StudentRepository : JpaRepository<Student, Long> {}
 interface SchoolRepository : JpaRepository<School, Long> {
-    @Query("select sc from School sc join fetch sc.students st where st.name = :studentsName")
-    fun findByStudentsNameNow(studentsName: String): MutableList<School>
+    @Query("select s from School s join fetch s.students st where st.name = :studentsName")
+    fun findAllWithStudentsByStudentsName(studentsName: String): MutableList<School>
+
+    //    fun findAllWithStudentsByName(name: String): MutableList<School>
+    @Query("select s from School s join fetch s.students where s.name = :name")
+    fun findAllWithStudentsByName(name: String): MutableList<School>
 }
