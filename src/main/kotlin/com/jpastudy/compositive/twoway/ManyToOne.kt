@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.Query
  * Buyer(1) : Book(N)
  */
 @Entity
-class Book(
+data class Book(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
@@ -29,7 +29,7 @@ class Book(
 )
 
 @Entity
-class Buyer(
+data class Buyer(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
@@ -58,7 +58,7 @@ class Buyer(
 }
 
 @Entity
-class Manager(
+data class Manager(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
@@ -73,7 +73,7 @@ class Manager(
 
 @Entity
 @Table(name = "`library`")
-class Library(
+data class Library(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
@@ -139,7 +139,7 @@ interface LibraryRepository : JpaRepository<Library, Long> {
  * Student(N) : School(1)
  */
 @Entity
-class Student(
+data class Student(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
@@ -153,7 +153,7 @@ class Student(
 )
 
 @Entity
-class School(
+data class School(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
