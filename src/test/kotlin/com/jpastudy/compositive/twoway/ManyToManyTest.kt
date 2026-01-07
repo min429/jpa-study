@@ -107,4 +107,26 @@ class ManyToManyTest {
         val savedJob = jr.findById(jobs.first().id!!).get()
         assertThat(savedJob.workers.size).isEqualTo(0)
     }
+
+    @Test
+    @DisplayName("ManyToMany에서 clear 호출 시 M + 2 쿼리가 발생할 수 있음 (M: job의 개수)")
+    fun test5() {
+        val workers = listOf(Worker(name = "worker1"), Worker(name = "worker2"))
+        val jobs = listOf(Job(name = "job1"), Job(name = "job2"))
+
+        workers.forEach { it.addJobs(*jobs.toTypedArray()) }
+        wr.saveAll(workers)
+
+        flushAndClear()
+
+        val savedWorkers = wr.findAllWithJobs()
+        val savedJobs = jr.findAll()
+
+        savedWorkers.forEach { it.removeJobs(*savedJobs.toTypedArray()) } // 영속성 컨텍스트에 있는 job을 넣어야 됨
+
+        // savedWorker 마다 it.removeJobs 호출 n 번 { job 마다 removeWorker 호출 m번 } 쿼리 n * m 라고 생각할 수 있지만,
+        // 결과적으로 최종 job의 개수인 m개 만큼만 추가로 나감 (savedWorker마다 같은 job을 공유할 수 있기 때문에)
+        // 이게 싫으면 savedJobs를 가져올 때 fetch join으로 가져오면 되지만, 그냥 배치사이즈 쓰는게 나은 것 같음
+        flushAndClear()
+    }
 }

@@ -138,7 +138,6 @@ class ManyToOneTest {
         val school = School(name = "school")
         school.enrollStudents(*students.toTypedArray())
         scr.save(school)
-        str.saveAll(students)
 
         flushAndClear()
 
@@ -209,11 +208,28 @@ class ManyToOneTest {
         val school = School(name = "school")
         school.enrollStudents(*students.toTypedArray())
         scr.save(school)
-        str.saveAll(students)
 
         flushAndClear()
 
+        // 어짜피 지연로딩을 해도 join을 해야하기 때문에 그냥 웬만하면 fetch join으로 가져오도록 findAllWith~를 구현해서 쓰자
         val savedLibrary = scr.findAllWithStudentsByName(school.name).first()
         print(savedLibrary.students.first().name)
+    }
+
+    @Test
+    @DisplayName("지연로딩으로 clear() 시 N+1 쿼리 발생. clear()를 쓰려면 fetch join을 쓰자.")
+    fun test10() {
+        val students = listOf(Student(name = "student"))
+        val schools = listOf(School(name = "school1"), School(name = "school2"), School(name = "school3"))
+        schools.forEach { it.enrollStudents(*students.toTypedArray()) }
+        scr.saveAll(schools)
+
+        flushAndClear()
+
+        val savedSchools = scr.findAll()
+        val savedStudents = str.findAll()
+        savedSchools.forEach { it.kickStudents(*savedStudents.toTypedArray()) }
+
+        flushAndClear()
     }
 }

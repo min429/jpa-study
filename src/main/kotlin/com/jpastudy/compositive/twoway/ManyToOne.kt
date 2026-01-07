@@ -51,7 +51,7 @@ data class Buyer(
 
     fun sellBooks(vararg books: Book) {
         books.forEach { it.buyer = null }
-        this.books.removeAll(books)
+        this.books.removeAll(books.toList())
     }
 }
 
@@ -105,12 +105,12 @@ data class Library(
 
     fun removeBooks(vararg books: Book) {
         books.forEach { it.library = null }
-        this.books.removeAll(books)
+        this.books.removeAll(books.toList())
     }
 
     fun fireManagers(vararg managers: Manager) {
         managers.forEach { it.library = null }
-        this.managers.removeAll(managers)
+        this.managers.removeAll(managers.toList())
     }
 }
 
@@ -166,6 +166,11 @@ data class School(
         students.forEach { it.school = this }
         this.students.addAll(students)
     }
+
+    fun kickStudents(vararg students: Student) {
+        students.forEach { it.school = null }
+        this.students.removeAll(students.toList())
+    }
 }
 
 interface StudentRepository : JpaRepository<Student, Long> {}
@@ -173,7 +178,6 @@ interface SchoolRepository : JpaRepository<School, Long> {
     @Query("select s from School s join fetch s.students st where st.name = :studentsName")
     fun findAllWithStudentsByStudentsName(studentsName: String): MutableList<School>
 
-    //    fun findAllWithStudentsByName(name: String): MutableList<School>
     @Query("select s from School s join fetch s.students where s.name = :name")
     fun findAllWithStudentsByName(name: String): MutableList<School>
 }
