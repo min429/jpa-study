@@ -23,6 +23,12 @@ class ManyToManyTest {
     @Autowired
     lateinit var tr: TagRepository
 
+    @Autowired
+    lateinit var wr: WorkerRepository
+
+    @Autowired
+    lateinit var jr: JobRepository
+
     private fun flushAndClear() {
         em.flush()
         em.clear()
@@ -80,5 +86,25 @@ class ManyToManyTest {
             br.delete(savedBoard)
             flushAndClear()
         }.isInstanceOf(ConstraintViolationException::class.java)
+    }
+
+    @Test
+    @DisplayName("ManyToMany에서 중간 테이블에 대한 영속성 전이는 자동 적용된다.")
+    fun test4() {
+        val worker = Worker(name = "worker")
+        val jobs = listOf(Job(name = "job1"), Job(name = "job2"))
+
+        worker.addJobs(*jobs.toTypedArray())
+        wr.save(worker)
+
+        flushAndClear()
+
+        val savedWorker = wr.findById(worker.id!!).get()
+        wr.delete(savedWorker)
+
+        flushAndClear()
+
+        val savedJob = jr.findById(jobs.first().id!!).get()
+        assertThat(savedJob.workers.size).isEqualTo(0)
     }
 }

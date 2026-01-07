@@ -4,7 +4,7 @@ import jakarta.persistence.*
 import org.springframework.data.jpa.repository.JpaRepository
 
 /**
- * Board(N) : Tag(1)
+ * Board(N) : Tag(M)
  */
 @Entity
 data class Board(
@@ -53,3 +53,57 @@ data class Tag(
 
 interface BoardRepository : JpaRepository<Board, Long> {}
 interface TagRepository : JpaRepository<Tag, Long> {}
+
+/**
+ * Job(N) : Worker(M)
+ */
+@Entity
+data class Worker(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @ManyToMany(
+        fetch = FetchType.LAZY,
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE] // REMOVE는 사용할 이유가 없음 -> PERSIST, MERGE 정도만 사용
+    )
+    @JoinTable(name = "worker_job")
+    var jobs: MutableList<Job> = mutableListOf(),
+) {
+    fun addJobs(vararg jobs: Job) {
+        jobs.forEach { it.addWorker(this) }
+        this.jobs.addAll(jobs)
+    }
+
+    fun clearJobs() {
+        jobs.forEach { it.removeWorker(this) }
+        jobs.clear()
+    }
+}
+
+@Entity
+data class Job(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "jobs")
+    var workers: MutableList<Worker> = mutableListOf(),
+) {
+    fun addWorker(worker: Worker) {
+        workers.add(worker)
+    }
+
+    fun removeWorker(worker: Worker) {
+        workers.remove(worker)
+    }
+}
+
+interface WorkerRepository : JpaRepository<Worker, Long> {}
+interface JobRepository : JpaRepository<Job, Long> {}
