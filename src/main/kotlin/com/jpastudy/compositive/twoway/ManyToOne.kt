@@ -45,15 +45,13 @@ data class Buyer(
     var books: MutableList<Book> = mutableListOf()
 ) {
     fun buyBooks(vararg books: Book) {
-        val targets = books.toList()
-        targets.forEach { it.buyer = this }
-        this.books.addAll(targets)
+        books.forEach { it.buyer = this }
+        this.books.addAll(books)
     }
 
     fun sellBooks(vararg books: Book) {
-        val targets = books.toList()
-        targets.forEach { it.buyer = null }
-        this.books.removeAll(targets)
+        books.forEach { it.buyer = null }
+        this.books.removeAll(books)
     }
 }
 
@@ -96,27 +94,23 @@ data class Library(
     var managers: MutableList<Manager> = mutableListOf()
 ) {
     fun addBooks(vararg books: Book) {
-        val targets = books.toList()
-        targets.forEach { it.library = this }
-        this.books.addAll(targets)
+        books.forEach { it.library = this }
+        this.books.addAll(books)
     }
 
     fun hireManagers(vararg managers: Manager) {
-        val targets = managers.toList()
-        targets.forEach { it.library = this }
-        this.managers.addAll(targets)
+        managers.forEach { it.library = this }
+        this.managers.addAll(managers)
     }
 
     fun removeBooks(vararg books: Book) {
-        val targets = books.toList()
-        targets.forEach { it.library = null }
-        this.books.removeAll(targets)
+        books.forEach { it.library = null }
+        this.books.removeAll(books)
     }
 
     fun fireManagers(vararg managers: Manager) {
-        val targets = managers.toList()
-        targets.forEach { it.library = null }
-        this.managers.removeAll(targets)
+        managers.forEach { it.library = null }
+        this.managers.removeAll(managers)
     }
 }
 
@@ -169,9 +163,8 @@ data class School(
     var students: MutableList<Student> = mutableListOf(),
 ) {
     fun enrollStudents(vararg students: Student) {
-        val targets = students.toList()
-        targets.forEach { it.school = this }
-        this.students.addAll(targets)
+        students.forEach { it.school = this }
+        this.students.addAll(students)
     }
 }
 
