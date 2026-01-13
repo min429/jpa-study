@@ -1,4 +1,4 @@
-package com.jpastudy
+package com.jpastudy.persistence
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -13,7 +13,7 @@ import kotlin.test.Test
 
 @SpringBootTest
 @Transactional
-class JpaTest {
+class PersistenceTest {
 
     @Autowired
     lateinit var em: EntityManager
