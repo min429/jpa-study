@@ -12,8 +12,7 @@ data class Ceo(
     @Column(unique = true)
     var name: String,
 
-    @OneToOne(fetch = FetchType.LAZY) // FK를 가지고 있는 쪽에서는 지연로딩을 적용할 수 있다.
-    @JoinColumn(nullable = true, updatable = true)
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "ceo")
     var company: Company? = null
 )
 
@@ -26,7 +25,12 @@ data class Company(
     @Column(unique = true)
     var name: String,
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "company") // FK가 없는 쪽에서는 FetchType.LAZY를 해도 강제로 즉시로딩된다.
+    @OneToOne(
+        fetch = FetchType.LAZY,
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true
+    )
+    @JoinColumn(nullable = true, updatable = true)
     var ceo: Ceo? = null
 ) {
     fun addCustomer(CEO: Ceo) {
