@@ -70,4 +70,18 @@ class OneToOneTest {
         val savedCeo = ceor.findAll().first()
         assertThat(savedCeo.company).isNotNull()
     }
+
+    @Test
+    @DisplayName("@Query에 Enum 파라미터 가능")
+    fun test4() {
+        val company = Company(name = "company")
+        val ceo = Ceo(name = "ceo", gender = Ceo.Gender.MAN)
+        company.addCustomer(ceo) // 양쪽 객체 참조 설정
+        cmpr.save(company)
+
+        flushAndClear()
+
+        val savedCeo = ceor.findByGenderQuery(Ceo.Gender.MAN)
+        assertThat(savedCeo.gender).isEqualTo(Ceo.Gender.MAN)
+    }
 }
