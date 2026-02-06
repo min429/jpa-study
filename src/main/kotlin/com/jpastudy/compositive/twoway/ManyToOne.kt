@@ -181,3 +181,86 @@ interface SchoolRepository : JpaRepository<School, Long> {
     @Query("select s from School s join fetch s.students where s.name = :name")
     fun findAllWithStudentsByName(name: String): MutableList<School>
 }
+
+/**
+ * Camera(N) : Event(M)
+ * Camera(1) : EventCamera(N)
+ * Event(1) : EventCamera(M)
+ */
+@Entity
+data class Camera(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @OneToMany(
+        mappedBy = "camera",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    var eventCameras: MutableList<EventCamera> = mutableListOf()
+) {
+    fun addEventCameras(vararg eventCameras: EventCamera) {
+        eventCameras.forEach { it.camera = this }
+        this.eventCameras.addAll(eventCameras)
+    }
+
+    fun removeEventCameras(vararg eventCameras: EventCamera) {
+        eventCameras.forEach { it.camera = null }
+        this.eventCameras.removeAll(eventCameras.toList())
+    }
+}
+
+@Entity
+data class Event(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @OneToMany(
+        mappedBy = "event",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    var eventCameras: MutableList<EventCamera> = mutableListOf(),
+) {
+    fun addEventCameras(vararg eventCameras: EventCamera) {
+        eventCameras.forEach { it.event = this }
+        this.eventCameras.addAll(eventCameras)
+    }
+
+    fun removeEventCameras(vararg eventCameras: EventCamera) {
+        eventCameras.forEach { it.event = null }
+        this.eventCameras.removeAll(eventCameras.toList())
+    }
+}
+
+@Entity
+data class EventCamera(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
+    var event: Event? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true, updatable = true)
+    var camera: Camera? = null
+)
+
+interface EventCameraRepository : JpaRepository<EventCamera, Long> {}
+interface CameraRepository : JpaRepository<Camera, Long> {}
+interface EventRepository : JpaRepository<Event, Long> {}

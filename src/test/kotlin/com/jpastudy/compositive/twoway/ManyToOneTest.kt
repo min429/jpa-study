@@ -30,6 +30,9 @@ class ManyToOneTest {
     @Autowired
     lateinit var scr: SchoolRepository
 
+    @Autowired
+    lateinit var er: EventRepository
+
     private fun flushAndClear() {
         em.flush()
         em.clear()
@@ -112,8 +115,28 @@ class ManyToOneTest {
     }
 
     @Test
-    @DisplayName("지연로딩으로 컬렉션 조건에 맞게 가져온 후 컬렉션에 접근하면 전체 컬렉션을 가져와버림")
+    @DisplayName("둘 이상의 부모엔티티에 영속성 전이 REMOVE 또는 고아객체 옵션 있으면 정합성 문제 생김")
     fun test6() {
+        val eventCamera = EventCamera(name = "eventCamera")
+        val camera = Camera(name = "camera")
+        val event = Event(name = "event")
+
+        camera.addEventCameras(eventCamera)
+        event.addEventCameras(eventCamera)
+
+        em.persist(camera)
+        em.persist(event)
+
+        camera.removeEventCameras(eventCamera)
+
+        flushAndClear()
+
+        assertThat(event.eventCameras.size).isNotZero
+    }
+
+    @Test
+    @DisplayName("지연로딩으로 컬렉션 조건에 맞게 가져온 후 컬렉션에 접근하면 전체 컬렉션을 가져와버림")
+    fun test7() {
         val books = listOf(Book(name = "book1"), Book(name = "book2"))
         val library = Library(name = "library")
         library.addBooks(*books.toTypedArray())
@@ -133,7 +156,7 @@ class ManyToOneTest {
 
     @Test
     @DisplayName("join fetch로 컬렉션 일부 조회 후 clear() 하면 조회한 일부 요소만 삭제함. 전체 요소 삭제 x")
-    fun test7() {
+    fun test8() {
         val students = listOf(Student(name = "student1"), Student(name = "student2"))
         val school = School(name = "school")
         school.enrollStudents(*students.toTypedArray())
@@ -156,7 +179,7 @@ class ManyToOneTest {
 
     @Test
     @DisplayName("N:M 지연로딩 시 N+M+1 쿼리가 발생한다.")
-    fun test8() {
+    fun test9() {
         val booksList = listOf(
             // library1
             listOf(
@@ -203,7 +226,7 @@ class ManyToOneTest {
 
     @Test
     @DisplayName("findAllWith~ 메서드는 미리 구현되어있지만, fetch join이 아니다. 따라서 직접 쿼리를 작성해야한다.")
-    fun test9() {
+    fun test10() {
         val students = listOf(Student(name = "student1"), Student(name = "student2"))
         val school = School(name = "school")
         school.enrollStudents(*students.toTypedArray())
@@ -218,7 +241,7 @@ class ManyToOneTest {
 
     @Test
     @DisplayName("지연로딩으로 clear() 시 N+1 쿼리 발생. clear()를 쓰려면 fetch join을 쓰자.")
-    fun test10() {
+    fun test11() {
         val students = listOf(Student(name = "student"))
         val schools = listOf(School(name = "school1"), School(name = "school2"), School(name = "school3"))
         schools.forEach { it.enrollStudents(*students.toTypedArray()) }
