@@ -1,5 +1,6 @@
 package com.jpastudy.compositive.twoway
 
+import jakarta.persistence.EntityExistsException
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -50,8 +51,27 @@ class ManyToManyTest {
     }
 
     @Test
-    @DisplayName("ManyToMany에서 중간 테이블에 대한 orphanRemoval은 자동 적용된다. 상대 테이블에는 orphanRemoval을 적용할 수 없다.")
+    @DisplayName("ManyToMany에서 이미 저장된 엔티티로 persist 시 EntityExistsException이 발생하지만, SimpleJpaRepository의 save/saveAll 사용 시 id 값이 있으면 merge를 해서 중복이 발생하지 않는다.")
     fun test2() {
+        val board = Board(name = "board")
+        val tags = listOf(Tag(name = "tag1"), Tag(name = "tag2"))
+        board.addTags(*tags.toTypedArray())
+        br.save(board)
+        flushAndClear()
+
+        br.save(board) // merge
+        flushAndClear()
+
+        assertThat(br.findAll().size).isEqualTo(1)
+        assertThatThrownBy {
+            em.persist(board)
+            flushAndClear()
+        }.isInstanceOf(EntityExistsException::class.java)
+    }
+
+    @Test
+    @DisplayName("ManyToMany에서 중간 테이블에 대한 orphanRemoval은 자동 적용된다. 상대 테이블에는 orphanRemoval을 적용할 수 없다.")
+    fun test3() {
         val board = Board(name = "board")
         val tags = listOf(Tag(name = "tag1"), Tag(name = "tag2"))
 
@@ -71,7 +91,7 @@ class ManyToManyTest {
 
     @Test
     @DisplayName("ManyToMany에서 상대 테이블에 remove 영속성 전이를 걸어도 FK 제약조건 위반으로 삭제가 불가능할 수 있다.")
-    fun test3() {
+    fun test4() {
         val boards = listOf(Board(name = "board1"), Board(name = "board2"))
         val tags = listOf(Tag(name = "tag1"), Tag(name = "tag2"))
 
@@ -90,7 +110,7 @@ class ManyToManyTest {
 
     @Test
     @DisplayName("ManyToMany에서 중간 테이블에 대한 영속성 전이는 자동 적용된다.")
-    fun test4() {
+    fun test5() {
         val worker = Worker(name = "worker")
         val jobs = listOf(Job(name = "job1"), Job(name = "job2"))
 
@@ -110,7 +130,7 @@ class ManyToManyTest {
 
     @Test
     @DisplayName("ManyToMany에서 clear 호출 시 M + 2 쿼리가 발생할 수 있음 (M: job의 개수)")
-    fun test5() {
+    fun test6() {
         val workers = listOf(Worker(name = "worker1"), Worker(name = "worker2"))
         val jobs = listOf(Job(name = "job1"), Job(name = "job2"))
 
