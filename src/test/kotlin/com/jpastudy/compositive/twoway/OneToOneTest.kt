@@ -84,4 +84,18 @@ class OneToOneTest {
         val savedCeo = ceor.findByGenderQuery(Ceo.Gender.MAN)
         println()
     }
+
+    @Test
+    @DisplayName("참조가 같은 객체는 한번만 저장(persist)된다.")
+    fun test5() {
+        val company = Company(name = "company")
+        val companies = listOf(company, company)
+
+        cmpr.saveAll(companies)
+
+        flushAndClear()
+
+        val count = cmpr.findAll().count()
+        assertThat(count).isNotEqualTo(companies.size)
+    }
 }
