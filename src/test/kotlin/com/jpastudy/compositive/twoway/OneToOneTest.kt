@@ -1,5 +1,6 @@
 package com.jpastudy.compositive.twoway
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -11,6 +12,9 @@ import kotlin.test.Test
 @SpringBootTest
 @Transactional
 class OneToOneTest {
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
     @Autowired
     lateinit var em: EntityManager
@@ -97,5 +101,32 @@ class OneToOneTest {
 
         val count = cmpr.findAll().count()
         assertThat(count).isNotEqualTo(companies.size)
+    }
+
+    @Test
+    @DisplayName("JSON 역직렬화한 객체(transient)로 DB 엔티티 갱신")
+    fun test6() {
+        // 원본 저장
+        val origin = cmpr.save(Company(name = "origin"))
+        flushAndClear()
+
+        // JSON 스냅샷 생성 (id 포함)
+        val json = objectMapper.writeValueAsString(origin)
+
+        // 원본 name 변경
+        cmpr.findById(origin.id!!).get().also { it.name = "changed" }
+        flushAndClear()
+
+        // JSON 역직렬화 → transient 상태
+        val snapshot = objectMapper.readValue(json, Company::class.java)
+
+        // snapshot으로 DB 엔티티 갱신
+        val managed = cmpr.findById(snapshot.id!!).orElseThrow()
+        managed.name = snapshot.name  // "origin"으로 복원
+
+        flushAndClear()
+
+        val result = cmpr.findById(origin.id!!).orElseThrow()
+        assertThat(result.name).isEqualTo("origin")
     }
 }
