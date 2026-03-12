@@ -1,7 +1,9 @@
 package com.jpastudy.compositive.twoway
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,6 +13,9 @@ import kotlin.test.Test
 @SpringBootTest
 @Transactional
 class ManyToOneTest {
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
     @Autowired
     lateinit var em: EntityManager
@@ -32,6 +37,9 @@ class ManyToOneTest {
 
     @Autowired
     lateinit var er: EventRepository
+
+    @Autowired
+    lateinit var cr: CameraRepository
 
     private fun flushAndClear() {
         em.flush()
@@ -254,5 +262,26 @@ class ManyToOneTest {
         savedSchools.forEach { it.kickStudents(*savedStudents.toTypedArray()) }
 
         flushAndClear()
+    }
+
+    @Test
+    @DisplayName("엔티티 컬렉션 Jackson 직렬화 가능")
+    fun test12() {
+        val camera = Camera(name = "camera")
+        val event = Event(name = "event")
+        val eventCamera = EventCamera(name = "eventCamera", camera = camera, event = event)
+
+        camera.addEventCameras(eventCamera)
+        event.addEventCameras(eventCamera)
+
+        cr.save(camera)
+        er.save(event)
+
+        flushAndClear()
+
+        assertThatCode {
+            val json = objectMapper.writeValueAsString(camera)
+            println(json)
+        }.doesNotThrowAnyException()
     }
 }

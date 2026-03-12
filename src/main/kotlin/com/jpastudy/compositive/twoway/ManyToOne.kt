@@ -1,6 +1,7 @@
 package com.jpastudy.compositive.twoway
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -254,10 +255,12 @@ data class EventCamera(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = true, updatable = true)
+    @JsonIgnore
     var event: Event? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = true, updatable = true)
+    @JsonIgnore
     var camera: Camera? = null
 )
 
