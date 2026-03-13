@@ -267,3 +267,44 @@ data class EventCamera(
 interface EventCameraRepository : JpaRepository<EventCamera, Long> {}
 interface CameraRepository : JpaRepository<Camera, Long> {}
 interface EventRepository : JpaRepository<Event, Long> {}
+
+/**
+ * Participant(N) : Contest(1)
+ */
+@Entity
+data class Participant(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+)
+
+@Entity
+data class Contest(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @Column(unique = true)
+    var name: String,
+
+    @OneToMany(
+        cascade = [CascadeType.ALL], orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    @JoinColumn(name = "contests_id", nullable = false)
+    var participants: MutableList<Participant> = mutableListOf(),
+) {
+    fun enrollParticipants(vararg participants: Participant) {
+        this.participants.addAll(participants)
+    }
+
+    fun kickParticipants(vararg participants: Participant) {
+        this.participants.removeAll(participants.toList())
+    }
+}
+
+interface ParticipantRepository : JpaRepository<Participant, Long> {}
+interface ContestRepository : JpaRepository<Contest, Long> {}

@@ -36,6 +36,9 @@ class ManyToOneTest {
     lateinit var scr: SchoolRepository
 
     @Autowired
+    lateinit var ctr: ContestRepository
+
+    @Autowired
     lateinit var er: EventRepository
 
     @Autowired
@@ -283,5 +286,24 @@ class ManyToOneTest {
             val json = objectMapper.writeValueAsString(camera)
             println(json)
         }.doesNotThrowAnyException()
+    }
+
+    @Test
+    @DisplayName("일대다 연관관계일 때 변경감지 시 컬렉션 업데이트 됨 (FK is not null)")
+    fun test13() {
+        val contest = Contest(name = "contest")
+        val participants = listOf(Participant(name = "participant1"), Participant(name = "participant2"))
+        contest.enrollParticipants(*participants.toTypedArray())
+        ctr.save(contest)
+
+        flushAndClear()
+
+        var savedContest = ctr.findById(contest.id!!).get()
+        savedContest.enrollParticipants(Participant(name = "participant3"))
+
+        flushAndClear() // 변경 감지
+
+        savedContest = ctr.findById(contest.id!!).get()
+        assertThat(savedContest.participants.size).isEqualTo(3)
     }
 }
