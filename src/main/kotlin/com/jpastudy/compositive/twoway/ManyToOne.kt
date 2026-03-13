@@ -294,7 +294,7 @@ data class Contest(
         cascade = [CascadeType.ALL], orphanRemoval = true,
         fetch = FetchType.LAZY
     )
-    @JoinColumn(name = "contests_id", nullable = false)
+    @JoinColumn(name = "contests_id", nullable = false, updatable = false)
     var participants: MutableList<Participant> = mutableListOf(),
 ) {
     fun enrollParticipants(vararg participants: Participant) {
