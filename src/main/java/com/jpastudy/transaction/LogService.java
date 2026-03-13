@@ -3,7 +3,7 @@ package com.jpastudy.transaction;
 import java.sql.Connection;
 
 import javax.sql.DataSource;
-
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+@DependsOnDatabaseInitialization
 @Service
 @RequiredArgsConstructor
 public class LogService {
@@ -21,14 +22,14 @@ public class LogService {
     @Transactional
     public void save(Log log) {
         Connection connection = DataSourceUtils.getConnection(dataSource);
-        System.out.println("Log save() connection: " + connection);
+        IO.println("Log save() connection: " + connection);
         logRepository.save(log);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void save_new(Log log) {
         Connection connection = DataSourceUtils.getConnection(dataSource);
-        System.out.println("Log save_new() connection: " + connection);
+        IO.println("Log save_new() connection: " + connection);
         logRepository.save(log);
     }
 

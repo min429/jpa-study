@@ -1,6 +1,5 @@
 package com.jpastudy.compositive.twoway
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -8,6 +7,7 @@ import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.ObjectMapper
 import kotlin.test.Test
 
 @SpringBootTest

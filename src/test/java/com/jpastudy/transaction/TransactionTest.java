@@ -95,7 +95,7 @@ public class TransactionTest {
         CompletableFuture.runAsync(() -> {
             try {
                 logService.save_fail(log);
-            } catch (Exception e) {
+            } catch (Exception _) {
             }
         }).join(); // 저장 완료 시까지 대기
 
@@ -111,7 +111,7 @@ public class TransactionTest {
         CompletableFuture.runAsync(() -> {
             try {
                 logService.save_new_fail(log);
-            } catch (Exception e) {
+            } catch (Exception _) {
             }
         }).join(); // 저장 완료 시까지 대기
 

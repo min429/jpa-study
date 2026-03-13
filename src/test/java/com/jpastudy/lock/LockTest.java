@@ -255,9 +255,9 @@ public class LockTest {
     }
 
     private static void printResult(AtomicInteger successCount, AtomicInteger failCount, Long result, long durationMs) {
-        System.out.println("성공한 트랜잭션 개수: " + successCount.get());
-        System.out.println("실패한 트랜잭션 개수: " + failCount.get());
-        System.out.println("최종 like 수: " + result);
-        System.out.println("전체 소요 시간: " + durationMs + "ms");
+        IO.println("성공한 트랜잭션 개수: " + successCount.get());
+        IO.println("실패한 트랜잭션 개수: " + failCount.get());
+        IO.println("최종 like 수: " + result);
+        IO.println("전체 소요 시간: " + durationMs + "ms");
     }
 }
