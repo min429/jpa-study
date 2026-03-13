@@ -289,17 +289,20 @@ class ManyToOneTest {
     }
 
     @Test
-    @DisplayName("일대다 연관관계일 때 변경감지 시 컬렉션 업데이트 됨 (FK is not null)")
+    @DisplayName("일대다 연관관계일 때 영속성 전이(merge/persist) 비교 (FK is not null)")
     fun test13() {
         val contest = Contest(name = "contest")
-        val participants = listOf(Participant(name = "participant1"), Participant(name = "participant2"))
+        val participants = mutableListOf(Participant(name = "participant1"), Participant(name = "participant2"))
         contest.enrollParticipants(*participants.toTypedArray())
+        participants.add(Participant(name = "participant3"))
         ctr.save(contest)
 
         flushAndClear()
 
         var savedContest = ctr.findById(contest.id!!).get()
-        savedContest.enrollParticipants(Participant(name = "participant3"))
+        savedContest.participants.clear()
+        savedContest.enrollParticipants(*participants.toTypedArray())
+        ctr.save(savedContest) // merge 전이 (save 호출 안하면 persist 전이)
 
         flushAndClear() // 변경 감지
 
