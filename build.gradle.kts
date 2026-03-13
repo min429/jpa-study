@@ -33,7 +33,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("com.querydsl:querydsl-jpa:5.1.0")
-    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
+    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:2.0.0")
 }
 
 kotlin {
